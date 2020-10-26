@@ -806,6 +806,10 @@ void Processor::Cb(const ignition::msgs::Pose_V &_msg)
       this->robots[name] = this->robotColors[
         this->robots.size() % this->robotColors.size()];
       this->prevPose[name] = pose;
+      const auto c = this->robots[name].ambient;
+      const auto colorStart = "\x1b[38;2;" + std::to_string(int(c.R() * 255)) + ";" + std::to_string(int(c.G() * 255)) + ";" + std::to_string(int(c.B() * 255)) + "m";
+      const auto colorEnd = "\x1b[0m";
+      std::cout << "Robot nr. " << this->robots.size() << " is " << name << colorStart << " (color " << this->robots[name].ambient << ")" << colorEnd << std::endl;
     }
 
     // The following line is here to capture robot poses close to
