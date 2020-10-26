@@ -284,10 +284,14 @@ class Processor
   /// \param[in] _pos Position of the visual marker.
   /// \param[in] _type Type of the visual marker.
   /// \param[in] _scale scale of the visual marker.
-  public: void SpawnMarker(MarkerColor &_color,
+  /// \param[in] _markerId If non-negative, this function should move already spawned marker with this id.
+  /// \param[in] _rot Optional rotation.
+  public: ignition::msgs::Marker SpawnMarker(MarkerColor &_color,
     const ignition::math::Vector3d &_pos,
     ignition::msgs::Marker::Type _type,
-    const ignition::math::Vector3d &_scale);
+    const ignition::math::Vector3d &_scale,
+    int _markerId = -1,
+    const ignition::math::Quaterniond &_rot = ignition::math::Quaterniond::Identity);
 
   /// \brief This callback is triggered on every pose message in the log file.
   public: void Cb(const ignition::msgs::Pose_V &_msg);
@@ -319,6 +323,9 @@ class Processor
 
   /// \brief Color of deployed breadcrumbs.
   public: MarkerColor breadcrumbColor;
+
+  /// \brief Marker IDs corresponding to the markers denoting current poses of the robots.
+  public: std::map<std::string, int> robotMarkers;
 
   /// \brief Last pose of a robot. This is used to reduce the number of markers.
   private: std::map<std::string, ignition::math::Pose3d> prevPose;

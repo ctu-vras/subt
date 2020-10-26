@@ -742,16 +742,18 @@ void Processor::DisplayArtifacts()
 }
 
 //////////////////////////////////////////////////
-void Processor::SpawnMarker(MarkerColor &_color,
+ignition::msgs::Marker Processor::SpawnMarker(MarkerColor &_color,
     const ignition::math::Vector3d &_pos,
     ignition::msgs::Marker::Type _type,
-    const ignition::math::Vector3d &_scale)
+    const ignition::math::Vector3d &_scale,
+    const int _markerId,
+    const ignition::math::Quaterniond &_rot)
 {
   // Create the marker message
   ignition::msgs::Marker markerMsg;
   ignition::msgs::Material matMsg;
   markerMsg.set_ns("default");
-  markerMsg.set_id(this->markerId++);
+  markerMsg.set_id(_markerId >= 0 ? _markerId : this->markerId++);
   markerMsg.set_action(ignition::msgs::Marker::ADD_MODIFY);
   markerMsg.set_type(_type);
   markerMsg.set_visibility(ignition::msgs::Marker::GUI);
@@ -775,9 +777,10 @@ void Processor::SpawnMarker(MarkerColor &_color,
   // The rest of this function adds different shapes and/or modifies shapes.
   // Read the terminal statements to figure out what each node.Request
   // call accomplishes.
-  ignition::msgs::Set(markerMsg.mutable_pose(),
-      ignition::math::Pose3d(_pos.X(), _pos.Y(), _pos.Z(), 0, 0, 0));
+  ignition::msgs::Set(markerMsg.mutable_pose(), ignition::math::Pose3d(_pos, _rot));
   this->markerNode->Request("/marker", markerMsg);
+
+  return markerMsg;
 }
 
 //////////////////////////////////////////////////
@@ -806,6 +809,8 @@ void Processor::Cb(const ignition::msgs::Pose_V &_msg)
       this->robots[name] = this->robotColors[
         this->robots.size() % this->robotColors.size()];
       this->prevPose[name] = pose;
+      this->robotMarkers[name] = ++this->markerId; // marker ID 0 is problematic
+      this->SpawnMarker(this->robots[name], ignition::math::Vector3d::Zero, ignition::msgs::Marker::SPHERE, ignition::math::Vector3d(10, 10, 10));
       const auto c = this->robots[name].ambient;
       const auto colorStart = "\x1b[38;2;" + std::to_string(int(c.R() * 255)) + ";" + std::to_string(int(c.G() * 255)) + ";" + std::to_string(int(c.B() * 255)) + "m";
       const auto colorEnd = "\x1b[0m";
@@ -852,6 +857,14 @@ void RobotPoseData::Render(Processor *_p)
           ignition::msgs::Marker::SPHERE,
           ignition::math::Vector3d(1, 1, 1));
     }
+    const auto z = iter->second.back().Pos().Z();
+    const auto scale = 1.0 + (((z + 100.0) / 200.0) - 0.5) * 1.5;
+    _p->SpawnMarker(_p->robots[iter->first],
+        iter->second.back().Pos() + ignition::math::Vector3d(0, 0, 5),
+        ignition::msgs::Marker::BOX,
+        ignition::math::Vector3d(scale * 10, scale * 5, 10),
+        _p->robotMarkers[iter->first],
+        ignition::math::Quaterniond(0, 0, iter->second.back().Rot().Yaw()));
   }
 }
 
