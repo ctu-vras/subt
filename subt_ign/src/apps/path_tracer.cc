@@ -755,6 +755,7 @@ void Processor::SpawnMarker(MarkerColor &_color,
 void Processor::Cb(const ignition::msgs::Pose_V &_msg)
 {
   std::unique_ptr<RobotPoseData> data(new RobotPoseData);
+  data->type = ROBOT;
   int sec = _msg.header().stamp().sec();
 
   // Process each pose in the message.
