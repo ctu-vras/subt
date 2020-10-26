@@ -742,7 +742,7 @@ void Processor::DisplayArtifacts()
     this->SpawnMarker(this->artifactColors["artifact_location_color"],
         artifact.second.Pos(),
         ignition::msgs::Marker::SPHERE,
-        ignition::math::Vector3d(8, 8, 8));
+        ignition::math::Vector3d(10, 10, 10));
   }
 }
 
@@ -899,13 +899,13 @@ void ReportData::Render(Processor *_p)
   {
     _p->SpawnMarker(_p->artifactColors["correct_report_color"], this->pos,
         ignition::msgs::Marker::SPHERE,
-        ignition::math::Vector3d(10, 10, 10));
+        ignition::math::Vector3d(12, 12, 12));
   }
   else
   {
     _p->SpawnMarker(_p->artifactColors["incorrect_report_color"], this->pos,
-        ignition::msgs::Marker::BOX,
-        ignition::math::Vector3d(4, 4, 4));
+        ignition::msgs::Marker::SPHERE,
+        ignition::math::Vector3d(10, 10, 10));
   }
 }
 
