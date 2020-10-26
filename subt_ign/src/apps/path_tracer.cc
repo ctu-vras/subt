@@ -147,6 +147,19 @@ Processor::Processor(const std::string &_path, const std::string &_configPath, c
                   {0.0, 0.2, 0.2, 0.5});
   }
 
+  // Color of breadcrumbs
+  if (cfg && cfg["breadcrumb_color"])
+  {
+    this->breadcrumbColor = MarkerColor(cfg["breadcrumb_color"]);
+  }
+  else
+  {
+    this->breadcrumbColor =
+      MarkerColor({1.0, 1.0, 0.0, 0.5},
+                  {1.0, 1.0, 0.0, 0.5},
+                  {1.0, 1.0, 0.0, 0.5});
+  }
+
   // Color of robot paths
   if (cfg && cfg["robot_colors"])
   {
@@ -275,6 +288,8 @@ Processor::Processor(const std::string &_path, const std::string &_configPath, c
       }
     }
 
+    size_t numReports = 0;
+    size_t numBreadcrumbs = 0;
     for (std::size_t i = 0; i < events.size(); ++i)
     {
       if (events[i]["type"].as<std::string>() == "artifact_report_attempt")
@@ -302,6 +317,18 @@ Processor::Processor(const std::string &_path, const std::string &_configPath, c
         }
 
         this->logData[sec].push_back(std::move(data));
+        numReports++;
+      }
+      else if (events[i]["type"].as<std::string>() == "breadcrumb_deploy")
+      {
+        int sec = events[i]["time_sec"].as<int>();
+        std::unique_ptr<BreadcrumbData> data = std::make_unique<BreadcrumbData>();
+        data->type = BREADCRUMB;
+        data->robot = events[i]["robot"].as<std::string>();
+        data->sec = sec;
+
+        this->logData[sec].push_back(std::move(data));
+        numBreadcrumbs++;
       }
       else if (events[i]["type"].as<std::string>() == "finished")
       {
@@ -330,6 +357,8 @@ Processor::Processor(const std::string &_path, const std::string &_configPath, c
         }
       }
     }
+    std::cout << "Parsed " << numReports << " artifact report attempt events." << std::endl;
+    std::cout << "Parsed " << numBreadcrumbs << " breadcrumb deploy events." << std::endl;
   }
   else
   {
@@ -844,6 +873,37 @@ void ReportData::Render(Processor *_p)
 void PhaseData::Render(Processor *)
 {
   // no-op
+}
+
+/////////////////////////////////////////////////
+void BreadcrumbData::Render(Processor *_p)
+{
+  for (int sec = this->sec; sec >= 0; --sec)
+  {
+    if (_p->logData.find(sec) != _p->logData.end())
+    {
+      for (const auto& data : _p->logData[sec])
+      {
+        if (data->type == ROBOT)
+        {
+          const auto& poses = dynamic_cast<RobotPoseData*>(data.get())->poses;
+          if (poses.find(this->robot) == poses.end())
+            continue;
+
+          const auto& pose = poses.at(this->robot).back();
+
+          _p->SpawnMarker(_p->breadcrumbColor,
+                          pose.Pos() + ignition::math::Vector3d(0, 0, 0.5),
+                          ignition::msgs::Marker::BOX,
+                          ignition::math::Vector3d(6, 6, 20));
+
+          return;
+        }
+      }
+    }
+  }
+
+  std::cerr << "Could not find position for breadcrumb at time " << this->sec << std::endl;
 }
 
 /////////////////////////////////////////////////

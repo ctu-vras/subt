@@ -90,6 +90,22 @@
 //     g: 0.2
 //     b: 0.2
 //     a: 0.5
+// breadcrumb_color:
+//   ambient:
+//     r: 1.0
+//     g: 1.0
+//     b: 0.0
+//     a: 0.5
+//   diffuse:
+//     r: 1.0
+//     g: 1.0
+//     b: 0.0
+//     a: 0.5
+//   emissive:
+//     r: 0.2
+//     g: 0.2
+//     b: 0.0
+//     a: 0.5
 // robot_colors:
 //   - color:
 //     ambient:
@@ -133,7 +149,8 @@ enum DataType
 {
   ROBOT  = 0,
   REPORT = 1,
-  PHASE = 2
+  PHASE = 2,
+  BREADCRUMB = 3
 };
 
 /// \brief Color properties for a marker.
@@ -206,6 +223,19 @@ class ReportData : public Data
 /// \brief Phase change data
 class PhaseData : public Data
 {
+  public: void Render(Processor *_p);
+};
+
+/// \brief Breadcrumb deployment data
+class BreadcrumbData : public Data
+{
+  /// \brief Name of the robot that deployed the breadcrumb.
+  public: std::string robot;
+
+  /// \brief The time when the breadcrumb was deployed.
+  public: int sec;
+
+  /// \brief The render function for breadcrumb data.
   public: void Render(Processor *_p);
 };
 
@@ -287,6 +317,9 @@ class Processor
   /// \brief The colors used to represent each robot.
   public: std::vector<MarkerColor> robotColors;
 
+  /// \brief Color of deployed breadcrumbs.
+  public: MarkerColor breadcrumbColor;
+
   /// \brief Last pose of a robot. This is used to reduce the number of markers.
   private: std::map<std::string, ignition::math::Pose3d> prevPose;
 
@@ -306,7 +339,7 @@ class Processor
   private: std::condition_variable cv;
 
   /// \brief All of the pose data.
-  private: std::map<int, std::vector<std::unique_ptr<Data>>> logData;
+  public: std::map<int, std::vector<std::unique_ptr<Data>>> logData;
 
   /// \brief Realtime factor for playback.
   private: double rtf = 1.0;
