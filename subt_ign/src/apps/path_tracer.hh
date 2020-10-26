@@ -279,6 +279,16 @@ class Processor
   /// \brief Display the artifacts.
   public: void DisplayArtifacts();
 
+  /// \brief Callback that is called when a new era begins.
+  public: void OnNewEra();
+
+  /// \brief Get the era corresponding to the given time stamp.
+  /// \param[in] _stamp The time to refer to.
+  public: int GetEra(int _stamp)
+  {
+    return _stamp / 450;
+  }
+
   /// \brief Helper function that spawns a visual marker.
   /// \param[in] _color Color of the visual marker.
   /// \param[in] _pos Position of the visual marker.
@@ -326,6 +336,12 @@ class Processor
 
   /// \brief Marker IDs corresponding to the markers denoting current poses of the robots.
   public: std::map<std::string, int> robotMarkers;
+
+  /// \brief Lists of all robot path markers that belong to each era (used for dimming old path pieces).
+  public: std::map<int, ignition::msgs::Marker_V> pathMarkers;
+
+  /// \brief The time instant that is currently being processed.
+  public: int currentTime;
 
   /// \brief Last pose of a robot. This is used to reduce the number of markers.
   private: std::map<std::string, ignition::math::Pose3d> prevPose;

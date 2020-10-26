@@ -670,6 +670,8 @@ void Processor::DisplayPoses()
   {
     auto start = std::chrono::steady_clock::now();  // Dome
 
+    this->currentTime = iter->first;
+
     // Display new visual markers.
     for (std::unique_ptr<Data> &data : iter->second)
     {
@@ -682,6 +684,9 @@ void Processor::DisplayPoses()
     {
       // This is the next sim time that contains new visual data.
       this->nextSimTime = next->first / this->rtf + this->startSimTime;  // Dome
+
+      if (this->GetEra(this->currentTime) != this->GetEra(next->first))
+        this->OnNewEra();
 
       // Debug output
       printf("%ds/%ds (%06.2f%%) start=%4.1f currDelta=%4.1f nextDelta=%4.1f next=%4.1f curr=%4.1f\n",
@@ -783,6 +788,22 @@ ignition::msgs::Marker Processor::SpawnMarker(MarkerColor &_color,
   return markerMsg;
 }
 
+/////////////////////////////////////////////////
+void Processor::OnNewEra()
+{
+  const auto shrinkFactor = 0.85;
+  for (auto& pair : this->pathMarkers) {
+    for (auto& m : *pair.second.mutable_marker()) {
+      m.mutable_scale()->set_x(m.scale().x() * shrinkFactor);
+      m.mutable_scale()->set_y(m.scale().y() * shrinkFactor);
+      m.mutable_scale()->set_z(m.scale().z() * shrinkFactor);
+    }
+    ignition::msgs::Boolean resp;
+    bool res;
+    this->markerNode->Request("/marker_array", pair.second, 2000, resp, res);
+  }
+}
+
 //////////////////////////////////////////////////
 void Processor::Cb(const ignition::msgs::Pose_V &_msg)
 {
@@ -852,10 +873,11 @@ void RobotPoseData::Render(Processor *_p)
   {
     for (const ignition::math::Pose3d &p : iter->second)
     {
-      _p->SpawnMarker(_p->robots[iter->first],
+      const auto m = _p->SpawnMarker(_p->robots[iter->first],
           p.Pos() + ignition::math::Vector3d(0, 0, 0.5),
           ignition::msgs::Marker::SPHERE,
           ignition::math::Vector3d(1, 1, 1));
+      *_p->pathMarkers[_p->GetEra(_p->currentTime)].add_marker() = m;
     }
     const auto z = iter->second.back().Pos().Z();
     const auto scale = 1.0 + (((z + 100.0) / 200.0) - 0.5) * 1.5;
