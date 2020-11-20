@@ -93,6 +93,12 @@ echo "Creating tmp GUI config for resolution ${width}x${height}"
 EOF
 ) > gui.config
 
+has_gsettings=0
+[ -n "$(which gsettings)" ] && has_gsettings=1
+old_auto_maximize="$(gsettings get org.gnome.mutter auto-maximize)"
+[ "$?" != 0 ] && has_gsettings=0
+[ "${has_gsettings}" = 1 ] && gsettings set org.gnome.mutter auto-maximize false
+
 echo "Starting log playback and video recording"
 
 export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=$LD_LIBRARY_PATH
@@ -102,6 +108,8 @@ ign gazebo -v 4 --gui-config gui.config "$scriptDir/$sdfName.sdf"
 echo "Video recording ended. Shutting down playback"
 
 pgrep -f $sdfName | xargs kill -9 &>/dev/null
+
+[ "${has_gsettings}" = 1 ] && gsettings set org.gnome.mutter auto-maximize "${old_auto_maximize}"
 
 videoDir=$(date +%s)
 echo "Moving mp4 videos to dir: $videoDir"
