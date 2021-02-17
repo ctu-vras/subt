@@ -13,7 +13,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>geometry_msgs</depend>
-  <depend>ignition-math6</depend>
+  <depend>ignition-math7</depend>
 
 
 </package>

@@ -37,9 +37,9 @@ generate_messages(
 )
 
 find_package(ignition-common3 REQUIRED)
-find_package(ignition-math6 REQUIRED)
+find_package(ignition-math7 REQUIRED)
 find_package(ignition-msgs7 REQUIRED)
-find_package(ignition-transport9 REQUIRED)
+find_package(ignition-transport10 REQUIRED)
 
 catkin_package(
   CATKIN_DEPENDS
@@ -77,9 +77,9 @@ target_include_directories(subt_ros_relay
 target_link_libraries(subt_ros_relay
   PUBLIC
     ignition-common3::ignition-common3
-    ignition-math6::ignition-math6
+    ignition-math7::ignition-math7
     ignition-msgs7::ignition-msgs7
-    ignition-transport9::ignition-transport9
+    ignition-transport10::ignition-transport10
     ${catkin_LIBRARIES}
 )
 add_dependencies(subt_ros_relay ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -90,9 +90,9 @@ target_include_directories(set_pose_relay
 target_link_libraries(set_pose_relay
   PUBLIC
     ignition-common3::ignition-common3
-    ignition-math6::ignition-math6
+    ignition-math7::ignition-math7
     ignition-msgs7::ignition-msgs7
-    ignition-transport9::ignition-transport9
+    ignition-transport10::ignition-transport10
     ${catkin_LIBRARIES}
 )
 add_dependencies(set_pose_relay ${catkin_EXPORTED_TARGETS})
