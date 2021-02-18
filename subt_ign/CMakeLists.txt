@@ -157,6 +157,18 @@ target_link_libraries(path_tracer SubtCommon)
 add_executable(validate_visibility_table src/apps/validate_visibility_table.cc)
 target_link_libraries(validate_visibility_table SubtCommon)
 
+# Create the libPlaybackEventRecorder.so library.
+set(playback_event_recorder_name PlaybackEventRecorder)
+add_library(${playback_event_recorder_name} SHARED
+  src/PlaybackEventRecorder.cc
+)
+target_link_libraries(${playback_event_recorder_name} SubtCommon)
+
+install(TARGETS ${playback_event_recorder_name}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 # Create log_checker executable.
 add_executable(log_checker src/apps/LogChecker.cc)
 target_link_libraries(log_checker SubtCommon)
