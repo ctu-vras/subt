@@ -717,7 +717,7 @@ void Processor::DisplayPoses()
         this->OnNewEra();
 
       // Debug output
-      printf("%ds/%ds (%06.2f%%) start=%4.1f currDelta=%4.1f nextDelta=%4.1f next=%4.1f curr=%4.1f\n",
+      printf("\r %ds/%ds (%06.2f%%) start=%4.1f currDelta=%4.1f nextDelta=%4.1f next=%4.1f curr=%4.1f",
           iter->first, this->logData.rbegin()->first,
           static_cast<double>(iter->first) / this->logData.rbegin()->first*100,
           this->startSimTime, iter->first / this->rtf, next->first / this->rtf, this->nextSimTime,
