@@ -486,6 +486,31 @@ Processor::Processor(const std::string &_path, const std::string &_configPath, c
   // Display all of the poses using visual markers.
   this->DisplayPoses();
 
+  for (size_t i = 0; i < 4; ++i)
+  {
+    std::vector<std::string> camPoseParts =
+      ignition::common::split(_cameraPose, " ");
+    ignition::msgs::GUICamera guiCamReq;
+    guiCamReq.mutable_pose()->mutable_orientation()->set_x(0);
+    guiCamReq.mutable_pose()->mutable_orientation()->set_y(0.707);
+    guiCamReq.mutable_pose()->mutable_orientation()->set_z(0);
+    guiCamReq.mutable_pose()->mutable_orientation()->set_w(0.707);
+    guiCamReq.mutable_pose()->mutable_position()->set_x(
+      std::stof(camPoseParts[0]));
+    guiCamReq.mutable_pose()->mutable_position()->set_y(
+      std::stof(camPoseParts[1]));
+    guiCamReq.mutable_pose()->mutable_position()->set_z(
+      std::stof(camPoseParts[2]) + i * 50);
+    result = executed = false;
+
+    while (!result || !executed)
+    {
+      executed = this->markerNode->Request("/gui/move_to/pose", guiCamReq,
+                                           2000, boolRep, result);
+      std::this_thread::sleep_for(std::chrono::seconds(5));
+    }
+  }
+
   ignition::msgs::VideoRecord endRecordReq;
   endRecordReq.set_stop(true);
   result = false;
