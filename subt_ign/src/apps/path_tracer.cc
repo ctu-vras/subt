@@ -640,7 +640,7 @@ void Processor::Pause(bool _pause)
 }
 
 //////////////////////////////////////////////////
-void Processor::StepUntil(int _sec)
+void Processor::StepUntil(int /*_sec*/)
 {
   /* // Dome
   ignition::msgs::WorldControl msg;
