@@ -382,4 +382,7 @@ class Processor
 
   /// \brief Mutex to protect recorder stats msg.
   public: std::mutex recorderStatsMutex;
+
+  /// \brief Whether to only check validity of the run on generate a trace.
+  private: bool onlyCheck;
 };

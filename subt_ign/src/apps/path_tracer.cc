@@ -77,6 +77,7 @@ MarkerColor::MarkerColor(const ignition::math::Color &_ambient,
 Processor::Processor(const std::string &_path, const std::string &_configPath, const std::string &_partition, const std::string &_cameraPose, const std::string &_worldName, bool _onlyCheck)
 {
   this->worldName = _worldName;
+  this->onlyCheck = _onlyCheck;
 
   YAML::Node cfg;
   if (!_configPath.empty())
@@ -830,12 +831,15 @@ void Processor::Cb(const ignition::msgs::Pose_V &_msg)
       this->robots[name] = this->robotColors[
         this->robots.size() % this->robotColors.size()];
       this->prevPose[name] = pose;
-      this->robotMarkers[name] = ++this->markerId; // marker ID 0 is problematic
-      this->SpawnMarker(this->robots[name], ignition::math::Vector3d::Zero, ignition::msgs::Marker::SPHERE, ignition::math::Vector3d(10, 10, 10));
-      const auto c = this->robots[name].ambient;
-      const auto colorStart = "\x1b[38;2;" + std::to_string(int(c.R() * 255)) + ";" + std::to_string(int(c.G() * 255)) + ";" + std::to_string(int(c.B() * 255)) + "m";
-      const auto colorEnd = "\x1b[0m";
-      std::cout << "Robot nr. " << this->robots.size() << " is " << name << colorStart << " (color " << this->robots[name].ambient << ")" << colorEnd << std::endl;
+      if (!this->onlyCheck)
+      {
+        this->robotMarkers[name] = ++this->markerId; // marker ID 0 is problematic
+        this->SpawnMarker(this->robots[name], ignition::math::Vector3d::Zero, ignition::msgs::Marker::SPHERE, ignition::math::Vector3d(10, 10, 10));
+        const auto c = this->robots[name].ambient;
+        const auto colorStart = "\x1b[38;2;" + std::to_string(int(c.R() * 255)) + ";" + std::to_string(int(c.G() * 255)) + ";" + std::to_string(int(c.B() * 255)) + "m";
+        const auto colorEnd = "\x1b[0m";
+        std::cout << "Robot nr. " << this->robots.size() << " is " << name << colorStart << " (color " << this->robots[name].ambient << ")" << colorEnd << std::endl;
+      }
     }
 
     // The following line is here to capture robot poses close to
