@@ -220,10 +220,10 @@ Processor::Processor(const std::string &_path, const std::string &_configPath, c
     std::vector<std::string> camPoseParts =
       ignition::common::split(_cameraPose, " ");
     ignition::msgs::GUICamera guiCamReq;
-    guiCamReq.mutable_pose()->mutable_orientation()->set_x(0);
-    guiCamReq.mutable_pose()->mutable_orientation()->set_y(0.707);
-    guiCamReq.mutable_pose()->mutable_orientation()->set_z(0);
-    guiCamReq.mutable_pose()->mutable_orientation()->set_w(0.707);
+//    guiCamReq.mutable_pose()->mutable_orientation()->set_x(0);
+//    guiCamReq.mutable_pose()->mutable_orientation()->set_y(0.707);
+//    guiCamReq.mutable_pose()->mutable_orientation()->set_z(0);
+//    guiCamReq.mutable_pose()->mutable_orientation()->set_w(0.707);
     guiCamReq.mutable_pose()->mutable_position()->set_x(
         std::stof(camPoseParts[0]));
     guiCamReq.mutable_pose()->mutable_position()->set_y(
@@ -233,7 +233,7 @@ Processor::Processor(const std::string &_path, const std::string &_configPath, c
     // Make sure we actually move
     while (!result || !executed)
     {
-      std::cout << "Moving camera to " << _cameraPose << std::endl;
+      std::cout << "Moving camera to " << guiCamReq.pose().DebugString() << std::endl;
       executed = this->markerNode->Request("/gui/move_to/pose", guiCamReq,
           2000, boolRep, result);
       std::this_thread::sleep_for(std::chrono::seconds(5));
@@ -491,10 +491,10 @@ Processor::Processor(const std::string &_path, const std::string &_configPath, c
     std::vector<std::string> camPoseParts =
       ignition::common::split(_cameraPose, " ");
     ignition::msgs::GUICamera guiCamReq;
-    guiCamReq.mutable_pose()->mutable_orientation()->set_x(0);
-    guiCamReq.mutable_pose()->mutable_orientation()->set_y(0.707);
-    guiCamReq.mutable_pose()->mutable_orientation()->set_z(0);
-    guiCamReq.mutable_pose()->mutable_orientation()->set_w(0.707);
+//    guiCamReq.mutable_pose()->mutable_orientation()->set_x(0);
+//    guiCamReq.mutable_pose()->mutable_orientation()->set_y(0.707);
+//    guiCamReq.mutable_pose()->mutable_orientation()->set_z(0);
+//    guiCamReq.mutable_pose()->mutable_orientation()->set_w(0.707);
     guiCamReq.mutable_pose()->mutable_position()->set_x(
       std::stof(camPoseParts[0]));
     guiCamReq.mutable_pose()->mutable_position()->set_y(
@@ -502,6 +502,8 @@ Processor::Processor(const std::string &_path, const std::string &_configPath, c
     guiCamReq.mutable_pose()->mutable_position()->set_z(
       std::stof(camPoseParts[2]) + i * 50);
     result = executed = false;
+
+    std::cout << "Moving camera to " << guiCamReq.pose().DebugString() << std::endl;
 
     while (!result || !executed)
     {
@@ -720,6 +722,7 @@ void Processor::DisplayPoses()
           static_cast<double>(iter->first) / this->logData.rbegin()->first*100,
           this->startSimTime, iter->first / this->rtf, next->first / this->rtf, this->nextSimTime,
           this->simTime);
+      ::fflush(::stdout);
       // Step simulation to the new timestamp
       // this->StepUntil(this->nextSimTime); // Dome
 
