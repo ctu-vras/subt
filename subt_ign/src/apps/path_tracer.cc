@@ -41,6 +41,12 @@ ignition::math::Color loadColor(const YAML::Node &_node, double _def = 1.0)
 }
 
 //////////////////////////////////////////////////
+double timeToDouble(const ignition::msgs::Time& _time)
+{
+  return static_cast<double>(_time.sec()) + _time.nsec() * 1e-9;
+}
+
+//////////////////////////////////////////////////
 MarkerColor::MarkerColor(const YAML::Node &_node)
 {
   if (_node["ambient"])
@@ -194,7 +200,7 @@ Processor::Processor(const std::string &_path, const std::string &_configPath, c
     opts.SetPartition(_partition);
     this->markerNode = std::make_unique<ignition::transport::Node>(opts);
     this->ClearMarkers();
-    this->Pause(true);
+    // this->Pause(true);  // Dome
 
     // Move camera
     std::vector<std::string> camPoseParts =
@@ -277,7 +283,10 @@ Processor::Processor(const std::string &_path, const std::string &_configPath, c
 
         // Read the reported pose.
         std::stringstream stream;
-        stream << events[i]["reported_pose"].as<std::string>();
+        if (events[i]["reported_pose_world_frame"])
+          stream << events[i]["reported_pose_world_frame"].as<std::string>();
+        else
+          stream << events[i]["reported_pose"].as<std::string>();
         stream >> reportedPos;
 
         int sec = events[i]["time_sec"].as<int>();
@@ -432,7 +441,7 @@ Processor::Processor(const std::string &_path, const std::string &_configPath, c
   ignition::msgs::VideoRecord startRecordReq;
   startRecordReq.set_start(true);
   startRecordReq.set_format("mp4");
-  startRecordReq.set_save_filename("/tmp/ign/output/0000-robot_paths.mp4");
+  startRecordReq.set_save_filename(ignition::common::joinPaths(_path, "path_trace.mp4"));
   result = false;
   executed = false;
 
@@ -545,7 +554,7 @@ void Processor::ClockCb(const ignition::msgs::Clock &_msg)
 {
   std::lock_guard<std::mutex> lock(this->stepMutex);
   //std::cout << "ClockCb[" << _msg.sim().sec() << "]\n";
-  this->simTime = _msg.sim().sec();
+  this->simTime = timeToDouble(_msg.sim());
   if (this->simTime >= this->nextSimTime)
     this->stepCv.notify_one();
 
@@ -604,6 +613,7 @@ void Processor::Pause(bool _pause)
 //////////////////////////////////////////////////
 void Processor::StepUntil(int _sec)
 {
+  /* // Dome
   ignition::msgs::WorldControl msg;
   ignition::msgs::Boolean boolRep;
   bool result;
@@ -615,6 +625,9 @@ void Processor::StepUntil(int _sec)
   this->markerNode->Request(
       "/world/" + this->worldName + "/control", msg, 500, boolRep, result);
   this->stepCv.wait(lock);
+  */
+  std::cerr << "Function StepUntil() is not implemented in Dome!" << std::endl;
+  throw std::runtime_error("StepUntil() called");
 }
 
 //////////////////////////////////////////////////
@@ -626,6 +639,8 @@ void Processor::DisplayPoses()
   for (std::map<int, std::vector<std::unique_ptr<Data>>>::iterator iter =
        this->logData.begin(); iter != this->logData.end(); ++iter)
   {
+    auto start = std::chrono::steady_clock::now();  // Dome
+
     // Display new visual markers.
     for (std::unique_ptr<Data> &data : iter->second)
     {
@@ -637,36 +652,46 @@ void Processor::DisplayPoses()
     if (next != this->logData.end())
     {
       // This is the next sim time that contains new visual data.
-      this->nextSimTime = next->first + this->startSimTime;
+      this->nextSimTime = next->first / this->rtf + this->startSimTime;  // Dome
 
       // Debug output
-      printf("%ds/%ds (%06.2f%%) start=%d currDelta=%d \
-nextDelta=%d next=%d curr=%ld\n",
+      printf("%ds/%ds (%06.2f%%) start=%4.1f currDelta=%4.1f nextDelta=%4.1f next=%4.1f curr=%4.1f\n",
           iter->first, this->logData.rbegin()->first,
           static_cast<double>(iter->first) / this->logData.rbegin()->first*100,
-          this->startSimTime, iter->first, next->first, this->nextSimTime,
+          this->startSimTime, iter->first / this->rtf, next->first / this->rtf, this->nextSimTime,
           this->simTime);
       // Step simulation to the new timestamp
-      this->StepUntil(this->nextSimTime);
+      // this->StepUntil(this->nextSimTime); // Dome
+
+      // Dome
+      int sleepTime = (((next->first - iter->first) / this->rtf)*1000);
+      auto duration = std::chrono::steady_clock::now() - start;
+      std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime)  -
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+          duration));
     }
 
     double dt = 0;
     {
       std::lock_guard<std::mutex> lock(this->recorderStatsMutex);
-      dt = this->simTime - this->recorderStatsMsg.sec();
+      double recorderSecs = timeToDouble(this->recorderStatsMsg);
+      dt = this->simTime - this->startSimTime - recorderSecs;
       // std::cerr << "simtime vs recorder stats time : "
-      //           << this->simTime << " vs " << this->recorderStatsMsg.sec()
+      //           << this->simTime << " vs " << recorderSecs
       //           << " " << dt << std::endl;
     }
     if (dt > 10)
     {
+      this->Pause(true);
       std::cout << "Pausing to catch up\n";
       while (dt >= 5)
       {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         std::lock_guard<std::mutex> lock(this->recorderStatsMutex);
-        dt = this->simTime - this->recorderStatsMsg.sec();
+        double recorderSecs = timeToDouble(this->recorderStatsMsg);
+        dt = this->simTime - this->startSimTime - recorderSecs;
       }
+      this->Pause(false);
       std::cout << "Resuming playback\n";
     }
   }

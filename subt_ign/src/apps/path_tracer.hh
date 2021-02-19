@@ -313,9 +313,9 @@ class Processor
 
   private: std::vector<int> scoreTimes;
 
-  private: int simTime;
-  private: int startSimTime = 0;
-  private: int nextSimTime = -1;
+  private: double simTime = 0;
+  private: double startSimTime = 0;
+  private: double nextSimTime = -1;
   private: std::mutex stepMutex;
   private: std::condition_variable stepCv;
   private: std::string worldName;
