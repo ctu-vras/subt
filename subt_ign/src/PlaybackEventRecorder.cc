@@ -48,6 +48,7 @@
 
 
 #include "PlaybackEventRecorder.hh"
+#include <subt_ign/Common.hh>
 
 IGNITION_ADD_PLUGIN(
     subt::PlaybackEventRecorder,
@@ -330,11 +331,8 @@ PlaybackEventRecorder::PlaybackEventRecorder()
   this->dataPtr->detectors.insert("staging_area");
 
   // artifact proximity events no longer needed
-  this->dataPtr->detectors.insert("backpack");
-  this->dataPtr->detectors.insert("phone");
-  this->dataPtr->detectors.insert("rescue_randy");
-  this->dataPtr->detectors.insert("rope");
-  this->dataPtr->detectors.insert("helmet");
+  for (const auto& pair : kArtifactNames)
+    this->dataPtr->detectors.insert(pair.first);
 
   // region of interest events - decision, vertical, elevation
   this->dataPtr->detectors.insert("tile");
