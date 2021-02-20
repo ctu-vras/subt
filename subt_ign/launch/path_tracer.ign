@@ -194,6 +194,17 @@
       <!-- <plugin filename="TransformControl" name="Transform Control">
         <service>/world/<%= $worldName %>/gui/transform_mode</service>
       </plugin> -->
+
+      <!-- TODO Grid3d is broken so far -->
+      <!--plugin filename="Grid3D" name="Grid 3D">
+        <engine>ogre2</engine>
+        <scene>scene</scene>
+        <insert>
+          <cell_count>50</cell_count>
+          <pose>0 0 0 0 0 0</pose>
+          <color>0.2 0.2 0.2 1.0</color>
+        </insert>
+      </plugin-->
     </plugin>
   </executable_wrapper>
 
