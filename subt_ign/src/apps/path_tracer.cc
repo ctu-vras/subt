@@ -589,7 +589,7 @@ void Processor::Playback(std::string _path)
 void Processor::SubscribeToArtifactPoseTopics()
 {
   bool subscribed = false;
-  for (int i = 0; i < 5 && !subscribed; ++i)
+  while(!subscribed)
   {
     std::vector<std::string> topics;
     this->markerNode->TopicList(topics);
@@ -600,10 +600,16 @@ void Processor::SubscribeToArtifactPoseTopics()
       {
         this->markerNode->Subscribe(topic, &Processor::ArtifactCb, this);
         subscribed = true;
+        break;
       }
     }
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    if (!subscribed)
+    {
+      std::cerr << "Waiting for artifact poses to be published..." << std::endl;
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
   }
+  std::cout << "Artifact poses subscribed." << std::endl;
 }
 
 /////////////////////////////////////////////////
@@ -631,6 +637,7 @@ void Processor::RecorderStatsCb(const ignition::msgs::Time &_msg)
 /////////////////////////////////////////////////
 void Processor::ArtifactCb(const ignition::msgs::Pose_V &_msg)
 {
+  const auto numArtifacts = this->artifacts.size();
   // Process each pose in the message.
   for (int i = 0; i < _msg.pose_size(); ++i)
   {
@@ -650,6 +657,9 @@ void Processor::ArtifactCb(const ignition::msgs::Pose_V &_msg)
       this->artifacts[name] = pose;
     }
   }
+  if (numArtifacts != this->artifacts.size())
+    std::cout << "Artifact poses received (" << this->artifacts.size()
+              << " artifacts)" << std::endl;
 }
 
 //////////////////////////////////////////////////
