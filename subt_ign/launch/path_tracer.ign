@@ -136,6 +136,11 @@
 
         <!-- Top down -->
         <camera_pose>-40 -80 190 0 1.5708 1.5708</camera_pose>
+        <record_video>
+          <use_sim_time>true</use_sim_time>
+          <lockstep>true</lockstep>
+          <bitrate>8000000</bitrate>
+        </record_video>
       </plugin>
       <plugin filename="WorldControl" name="World control">
         <ignition-gui>
