@@ -24,6 +24,7 @@
 #include <ignition/msgs/Utility.hh>
 
 #include <ignition/transport/log/Log.hh>
+#include <ignition/transport/log/QueryOptions.hh>
 
 #include <list>
 #include <mutex>
@@ -32,6 +33,7 @@
 #include <ignition/common/Console.hh>
 #include <ignition/plugin/Register.hh>
 
+#include <ignition/gazebo/components/Geometry.hh>
 #include <ignition/gazebo/components/Model.hh>
 #include <ignition/gazebo/components/Name.hh>
 #include <ignition/gazebo/components/ParentEntity.hh>
@@ -45,6 +47,9 @@
 #include <ignition/gazebo/Util.hh>
 
 #include <ignition/transport/Node.hh>
+#include <sdf/Mesh.hh>
+#include <ignition/fuel_tools/FuelClient.hh>
+#include <ignition/common/StringUtils.hh>
 
 
 #include "PlaybackEventRecorder.hh"
@@ -393,6 +398,74 @@ void PlaybackEventRecorder::Configure(const ignition::gazebo::Entity &,
       std::chrono::duration_cast<std::chrono::seconds>(
       log->EndTime()).count();
 
+  // search the log for all meshes; try to find the meshes locally, and if not
+  // found, try to download the whole corresponding models (including the correct
+  // model version number); this allows playback of older/newer logs when something
+  // is already downloaded but the model versions do not match
+  std::unordered_map<std::string, std::string> localModels;
+
+  ignmsg << "Checking whether all simulation resources are downloaded, this might take a while..." << std::endl;
+
+  std::string stateTopic = log->Descriptor()->MsgTypesToTopicsToId().at(
+    "ignition.msgs.SerializedStateMap").begin()->first;
+  auto stateMsgs = log->QueryMessages(transport::log::TopicList(stateTopic));
+  for (const auto& stateMsg : stateMsgs)
+  {
+    ignition::msgs::SerializedStateMap states;
+    states.ParseFromString(stateMsg.Data());
+    for (const auto& entity : states.entities())
+    {
+      for (const auto& component : entity.second.components())
+      {
+        if (component.second.type() == ignition::gazebo::components::Geometry::typeId)
+        {
+          ignition::gazebo::components::Geometry geom;
+          auto stream = std::istringstream(component.second.component());
+          geom.Deserialize(stream);
+
+          if (geom.Data().Type() == sdf::GeometryType::MESH)
+          {
+            const auto uri = geom.Data().MeshShape()->Uri();
+            if (uri.empty() || uri[0] != '/')
+              continue;
+
+            // great, the resource exists!
+            if (common::exists(uri))
+              continue;
+
+            const std::string fuel = "/fuel.ignitionrobotics.org/";
+            const auto it = uri.find(fuel);
+            if (it == std::string::npos)
+              continue;
+
+            const auto part1 = uri.substr(0, it);
+            const auto part2 = uri.substr(it + fuel.size());
+
+            auto parts = common::Split(part2, '/');
+            if (parts.size() < 5)
+              continue;
+
+            for (int i = parts.size() - 1; i >= 4; --i)
+              parts.pop_back();
+
+            const auto modelName = common::Join(parts, '/');
+
+            localModels[modelName] = part1;
+          }
+        }
+      }
+    }
+  }
+
+  ignition::fuel_tools::FuelClient client;
+  for (const auto& modelPath : localModels)
+  {
+    const auto uri = common::URI("https://fuel.ignitionrobotics.org/1.0/" + modelPath.first);
+    ignwarn << "Model " << modelPath.first << " has missing meshes, redownloading..." << std::endl;
+    std::string path;
+    if (!client.DownloadModel(uri, path))
+      ignerr << "Could not download model " << uri.Str() << std::endl;
+  }
 
   std::string eventFilename = "filtered_events.yaml";
   if (!common::exists(common::joinPaths(this->dataPtr->logPath, eventFilename)))

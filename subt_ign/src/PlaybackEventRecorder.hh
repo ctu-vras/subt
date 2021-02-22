@@ -17,6 +17,7 @@
 #ifndef SUBT_IGN_PLAYBACKEVENTRECORDER_HH_
 #define SUBT_IGN_PLAYBACKEVENTRECORDER_HH_
 
+static const char* const pattern = "/fuel.ignitionrobotics.org/";
 #include <memory>
 #include <ignition/gazebo/System.hh>
 
