@@ -859,7 +859,8 @@ void Processor::Cb(const ignition::msgs::Pose_V &_msg)
     if (name.find("_wheel") != std::string::npos ||
         name.find("breadcrumb_") != std::string::npos ||
         name.find("Rock") != std::string::npos ||
-        name.find("rotor_") != std::string::npos || name == "base_link") {
+        name.find("rotor_") != std::string::npos || name == "base_link" ||
+        name == "imu_link") {
       continue;
     }
 
