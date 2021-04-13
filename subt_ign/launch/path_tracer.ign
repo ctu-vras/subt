@@ -42,7 +42,7 @@
 
   <plugin name="ignition::launch::GazeboServer"
           filename="libignition-launch-gazebo.so">
-    <% if $worldName.include?('tunnel_circuit_') &&
+   <% if $worldName.include?('tunnel_circuit_') &&
           !$worldName.include?('practice') %>
       <world_file>tunnel_circuit/<%= worldNumber %>/<%= $worldName %>.sdf</world_file>
     <% elsif $worldName.include?('urban_circuit_') &&
@@ -51,6 +51,9 @@
     <% elsif $worldName.include?('cave_circuit_') &&
           !$worldName.include?('practice') %>
       <world_file>cave_circuit/<%= worldNumber %>/<%= $worldName %>.sdf</world_file>
+    <% elsif $worldName.include?('final_event') &&
+          !$worldName.include?('practice') %>
+      <world_file>final_event/<%= worldNumber %>/<%= $worldName %>.sdf</world_file>
     <% else %>
       <world_file><%= $worldName %>.sdf</world_file>
     <% end %>
@@ -108,6 +111,12 @@
             entity_type="world"
             filename="libignition-gazebo-air-pressure-system.so"
             name="ignition::gazebo::systems::AirPressure">
+    </plugin>
+
+    <plugin entity_name="<%= $worldName %>"
+            entity_type="world"
+            filename="ignition-gazebo-contact-system"
+            name="ignition::gazebo::systems::Contact">
     </plugin>
 -->
     </plugin>
