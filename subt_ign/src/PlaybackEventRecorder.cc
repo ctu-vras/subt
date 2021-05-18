@@ -1271,12 +1271,15 @@ void PlaybackEventRecorderPrivate::Follow(const std::string &_entity)
   std::function<void(const ignition::msgs::Boolean &, const bool)> cb =
       [](const ignition::msgs::Boolean &/*_rep*/, const bool _result)
   {
+    igndbg << "Follow call finished" << std::endl;
     if (!_result)
       ignerr << "Error sending follow request" << std::endl;
   };
 
   ignition::msgs::StringMsg req;
   req.set_data(_entity);
+  igndbg << "Sleeping 30 seconds before following entity" << std::endl;
+  sleep(30);
   if (this->node.Request(this->followService, req, cb))
   {
     igndbg << "Follow entity: " << _entity << std::endl;
