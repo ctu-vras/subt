@@ -1199,7 +1199,7 @@ void GameLogicPlugin::PreUpdate(const UpdateInfo &_info,
         });
   }
   else
-  {
+  {/*
     // Check for crashes
     for (auto &ke : this->dataPtr->keInfo)
     {
@@ -1259,7 +1259,7 @@ void GameLogicPlugin::PreUpdate(const UpdateInfo &_info,
           }
         }
       }
-    }
+    } */
   }
 }
 
